@@ -8,9 +8,8 @@ from __future__ import annotations as _annotations
 
 import json
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import Annotated
 
 import fastapi
 import logfire
@@ -18,15 +17,11 @@ from database import Database
 from dotenv import load_dotenv
 from fastapi import Depends, Request
 from fastapi.responses import FileResponse, Response, StreamingResponse
-from pydantic_ai import Agent, UnexpectedModelBehavior
-from pydantic_ai.messages import (
-    ModelMessage,
-    ModelRequest,
-    ModelResponse,
-    TextPart,
-    UserPromptPart,
-)
-from typing_extensions import TypedDict
+from models import ChatMessage
+from pydantic_ai import Agent
+from pydantic_ai.messages import ModelResponse, TextPart
+from tools import register_tools
+from utils import create_user_message, to_chat_message
 
 load_dotenv()
 
@@ -34,48 +29,25 @@ load_dotenv()
 logfire.configure(send_to_logfire="if-token-present")
 logfire.instrument_pydantic_ai()
 
-# Initialize the AI agent
-agent = Agent("openai:gpt-4o")
+# Initialize the AI agent with enhanced capabilities
+agent = Agent(
+    "openai:gpt-4o",
+    system_prompt="""
+    You are a helpful AI assistant with access to real-world weather and time data.
+    Unlike basic chatbots, you can:
+    - Check current weather conditions for any location
+    - Get the current date and time
+    - Remember context between conversations
+    
+    Use your tools when appropriate to provide accurate, up-to-date information.
+    Be conversational and helpful!
+    """,
+)
+
+# Register all the enhanced tools
+register_tools(agent)
+
 THIS_DIR = Path(__file__).parent
-
-
-# Chat message models and utilities
-class ChatMessage(TypedDict):
-    """Format of messages sent to the browser."""
-
-    role: Literal["user", "model"]
-    timestamp: str
-    content: str
-
-
-def to_chat_message(m: ModelMessage) -> ChatMessage:
-    """Convert a ModelMessage to a ChatMessage for the frontend."""
-    first_part = m.parts[0]
-    if isinstance(m, ModelRequest):
-        if isinstance(first_part, UserPromptPart):
-            assert isinstance(first_part.content, str)
-            return {
-                "role": "user",
-                "timestamp": first_part.timestamp.isoformat(),
-                "content": first_part.content,
-            }
-    elif isinstance(m, ModelResponse):
-        if isinstance(first_part, TextPart):
-            return {
-                "role": "model",
-                "timestamp": m.timestamp.isoformat(),
-                "content": first_part.content,
-            }
-    raise UnexpectedModelBehavior(f"Unexpected message type for chat app: {m}")
-
-
-def create_user_message(content: str) -> ChatMessage:
-    """Create a user ChatMessage with current timestamp."""
-    return {
-        "role": "user",
-        "timestamp": datetime.now(tz=timezone.utc).isoformat(),
-        "content": content,
-    }
 
 
 @asynccontextmanager
