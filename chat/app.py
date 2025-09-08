@@ -82,8 +82,19 @@ async def main_ts() -> FileResponse:
 async def get_chat(database: Database = Depends(get_db)) -> Response:
     """Get all chat messages."""
     msgs = await database.get_messages()
+
+    # Filter and convert messages, skipping system-only messages
+    chat_messages = []
+    for m in msgs:
+        try:
+            chat_msg = to_chat_message(m)
+            chat_messages.append(json.dumps(chat_msg).encode("utf-8"))
+        except Exception:
+            # Skip messages that can't be converted (like system-only messages)
+            continue
+
     return Response(
-        b"\n".join(json.dumps(to_chat_message(m)).encode("utf-8") for m in msgs),
+        b"\n".join(chat_messages),
         media_type="text/plain",
     )
 

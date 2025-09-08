@@ -56,6 +56,8 @@ class Database:
         cur.execute(
             "CREATE TABLE IF NOT EXISTS messages (id INT PRIMARY KEY, message_list TEXT);"
         )
+        # Clear all existing messages on startup
+        cur.execute("DELETE FROM messages;")
         con.commit()
         return con
 

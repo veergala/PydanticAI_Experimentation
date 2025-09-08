@@ -8,6 +8,7 @@ from pydantic_ai.messages import (
     ModelMessage,
     ModelRequest,
     ModelResponse,
+    SystemPromptPart,
     TextPart,
     UserPromptPart,
 )
@@ -15,22 +16,28 @@ from pydantic_ai.messages import (
 
 def to_chat_message(m: ModelMessage) -> ChatMessage:
     """Convert a ModelMessage to a ChatMessage for the frontend."""
-    first_part = m.parts[0]
     if isinstance(m, ModelRequest):
-        if isinstance(first_part, UserPromptPart):
-            assert isinstance(first_part.content, str)
-            return {
-                "role": "user",
-                "timestamp": first_part.timestamp.isoformat(),
-                "content": first_part.content,
-            }
+        # Look for the UserPromptPart, skipping SystemPromptParts
+        for part in m.parts:
+            if isinstance(part, UserPromptPart):
+                assert isinstance(part.content, str)
+                return {
+                    "role": "user",
+                    "timestamp": part.timestamp.isoformat(),
+                    "content": part.content,
+                }
+        # If no UserPromptPart found, skip this message (it's system-only)
+        raise UnexpectedModelBehavior("No user prompt found in ModelRequest")
+
     elif isinstance(m, ModelResponse):
+        first_part = m.parts[0]
         if isinstance(first_part, TextPart):
             return {
                 "role": "model",
                 "timestamp": m.timestamp.isoformat(),
                 "content": first_part.content,
             }
+
     raise UnexpectedModelBehavior(f"Unexpected message type for chat app: {m}")
 
 
