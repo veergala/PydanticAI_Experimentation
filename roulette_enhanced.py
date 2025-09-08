@@ -103,8 +103,13 @@ async def place_bet(
     if amount <= 0:
         return "❌ Bet amount must be positive!"
 
+    was_capped = False
+
     if amount > ctx.deps.balance:
-        return f"❌ Insufficient funds! Your balance is ${ctx.deps.balance}"
+        amount = ctx.deps.balance
+        was_capped = True
+        if amount <= 0:
+            return "❌ You have no money left to bet!"
 
     # Validate bet types
     valid_bet_types = ["straight", "color", "odd_even", "high_low"]
@@ -126,7 +131,10 @@ async def place_bet(
     elif bet_type == "high_low" and bet_value not in ["high", "low"]:
         return "❌ Invalid choice! Choose 'high' (19-36) or 'low' (1-18)"
 
-    return f"✅ Bet placed: ${amount} on {bet_type} {bet_value}"
+    if was_capped:
+        return f"Bet capped to your balance: ${amount} on {bet_type} {bet_value}"
+    else:
+        return f"✅ Bet placed: ${amount} on {bet_type} {bet_value}"
 
 
 @roulette_agent.tool
