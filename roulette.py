@@ -22,12 +22,9 @@ async def roulette_wheel(ctx: RunContext[int], square: int) -> str:
     return "winner" if square == ctx.deps else "loser"
 
 
-# Run the agent
 success_number = 18
 result = roulette_agent.run_sync("Put my money on square eighteen", deps=success_number)
 print(result.output)
-# > True
 
 result = roulette_agent.run_sync("I bet five is the winner", deps=success_number)
 print(result.output)
-# > False

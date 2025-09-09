@@ -35,9 +35,9 @@ async def get_user_location() -> str:
                     return country
 
         # Fallback if geolocation fails
-        return "San Francisco"
+        return "London"
     except Exception:
-        return "San Francisco"
+        return "London"
 
 
 def register_tools(agent: "Agent") -> None:
