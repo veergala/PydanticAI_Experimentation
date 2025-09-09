@@ -17,7 +17,6 @@ from database import Database
 from dotenv import load_dotenv
 from fastapi import Depends, Request
 from fastapi.responses import FileResponse, Response, StreamingResponse
-from models import ChatMessage
 from pydantic_ai import Agent
 from pydantic_ai.messages import ModelResponse, TextPart
 from tools import register_tools
