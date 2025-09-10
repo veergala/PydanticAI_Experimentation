@@ -1,8 +1,8 @@
 import random
-from dataclasses import dataclass
 from typing import Optional, Union
 
 from dotenv import load_dotenv
+from pydantic import BaseModel, Field
 from pydantic_ai import Agent, RunContext
 
 load_dotenv()
@@ -13,11 +13,14 @@ RED_NUMBERS = {1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36
 BLACK_NUMBERS = {2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35}
 
 
-@dataclass
-class GameState:
-    balance: int = 1000
-    winning_number: Optional[int] = None
+class GameState(BaseModel):
+    balance: int = Field(default=1000, ge=0)
+    winning_number: Optional[int] = Field(default=None, ge=0, le=37)
     last_spin_result: Optional[str] = None
+
+    class Config:
+        allow_mutation = True
+        validate_assignment = True
 
 
 def get_number_color(number: int) -> str:
@@ -117,7 +120,7 @@ async def place_bet(
     elif bet_type == "high_low" and bet_value not in ["high", "low"]:
         return "❌ Invalid choice! Choose 'high' (19-36) or 'low' (1-18)"
 
-    prefix = "Bet capped to your balance: $" if was_capped else "✅ Bet placed: $"
+    prefix = "Bet capped to your balance: £" if was_capped else "✅ Bet placed: £"
     return f"{prefix}{amount} on {bet_type} {bet_value}"
 
 
@@ -127,7 +130,7 @@ async def check_results(
 ) -> str:
     """Check if the player won their bet and calculate payout"""
     if ctx.deps.winning_number is None:
-        return "❌ No spin result available! Spin the wheel first."
+        return "No spin result available! Spin the wheel first."
 
     # Convert bet_value for calculation
     calc_bet_value = bet_value
@@ -140,19 +143,21 @@ async def check_results(
 
     if payout > 0:
         ctx.deps.balance += payout
-        return f"🎉 Winner! You won ${payout - bet_amount}! New balance: ${ctx.deps.balance}"
-    else:
-        ctx.deps.balance = max(0, ctx.deps.balance)  # Prevent negative balance
         return (
-            f"💀 BUST! You lost ${bet_amount} and are completely broke! Balance: $0"
+            f"Winner! You won £{payout - bet_amount}! New balance: £{ctx.deps.balance}"
+        )
+    else:
+        ctx.deps.balance = max(0, ctx.deps.balance)
+        return (
+            f"BUST! You lost £{bet_amount} and are completely broke! Balance: £0"
             if ctx.deps.balance == 0
-            else f"💔 Sorry, you lost ${bet_amount}. New balance: ${ctx.deps.balance}"
+            else f"Sorry, you lost £{bet_amount}. New balance: £{ctx.deps.balance}"
         )
 
 
 @roulette_agent.tool
 async def get_balance(ctx: RunContext[GameState]) -> str:
-    return f"💰 Your current balance: ${ctx.deps.balance}"
+    return f"💰 Your current balance: £{ctx.deps.balance}"
 
 
 @roulette_agent.tool
@@ -168,22 +173,22 @@ BET TYPES:
 NOTES:
 • 0 and 00 are green and win only straight bets
 • Color, odd/even, and high/low bets lose on 0 and 00
-• You start with $1000"""
+• You start with £1000"""
 
 
 def main():
     print("🎰 Welcome to Enhanced PydanticAI Roulette! 🎰")
     print("Type your bets in natural language, like:")
-    print("- 'I bet $50 on red'")
-    print("- 'Put $25 on number 17'")
-    print("- 'I want to bet $100 on odd numbers'")
+    print("- 'I bet £50 on red'")
+    print("- 'Put £25 on number 17'")
+    print("- 'I want to bet £100 on odd numbers'")
     print("- Type 'rules' for game rules")
     print("- Type 'balance' to check your money")
     print("- Type 'quit' to exit\n")
 
     game_state = GameState()
     commands = {
-        "quit": lambda: f"Thanks for playing! Final balance: ${game_state.balance}",
+        "quit": lambda: f"Thanks for playing! Final balance: £{game_state.balance}",
         "rules": lambda: roulette_agent.run_sync(
             "Show me the game rules", deps=game_state
         ).output,
