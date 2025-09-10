@@ -177,7 +177,7 @@ NOTES:
 
 
 def main():
-    print("🎰 Welcome to Enhanced PydanticAI Roulette! 🎰")
+    print("Welcome to Enhanced Roulette!")
     print("Type your bets in natural language, like:")
     print("- 'I bet £50 on red'")
     print("- 'Put £25 on number 17'")
@@ -211,12 +211,12 @@ def main():
             print(result.output)
 
             if game_state.balance <= 0:
-                print("\n💀 GAME OVER! You've lost all your money!")
-                print("🎰 Thanks for playing Enhanced PydanticAI Roulette!")
-                print("💡 Better luck next time - the house always wins in the end!")
+                print("\nGAME OVER! You've lost all your money!")
+                print("Thanks for playing Enhanced Roulette!")
+                print("Better luck next time - the house always wins in the end!")
                 break
         except Exception as e:
-            print(f"❌ Error: {e}")
+            print(f"Error: {e}")
             print("Try rephrasing your bet or type 'rules' for help")
 
 
