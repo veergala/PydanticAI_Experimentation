@@ -18,10 +18,6 @@ class GameState(BaseModel):
     winning_number: Optional[int] = Field(default=None, ge=0, le=37)
     last_spin_result: Optional[str] = None
 
-    class Config:
-        allow_mutation = True
-        validate_assignment = True
-
 
 def get_number_color(number: int) -> str:
     """Get the color of a roulette number"""
