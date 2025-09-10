@@ -92,33 +92,33 @@ async def place_bet(
 ) -> str:
     """Place a bet on the roulette table"""
     if amount <= 0:
-        return "❌ Bet amount must be positive!"
+        return " Bet amount must be positive!"
 
     was_capped = amount > ctx.deps.balance
     if was_capped:
         amount = ctx.deps.balance
         if amount <= 0:
-            return "❌ You have no money left to bet!"
+            return "You have no money left to bet!"
 
     # Validate bet types
     valid_bet_types = ["straight", "color", "odd_even", "high_low"]
     if bet_type not in valid_bet_types:
-        return f"❌ Invalid bet type! Valid types: {', '.join(valid_bet_types)}"
+        return f"Invalid bet type! Valid types: {', '.join(valid_bet_types)}"
 
     # Validate bet values based on type
     if bet_type == "straight":
         try:
             num = int(bet_value) if bet_value != "00" else 37
             if num not in ROULETTE_NUMBERS:
-                return "❌ Invalid number! Choose 0, 00, or 1-36"
+                return "Invalid number! Choose 0, 00, or 1-36"
         except ValueError:
-            return "❌ Invalid number format!"
+            return "Invalid number format!"
     elif bet_type == "color" and bet_value not in ["red", "black"]:
-        return "❌ Invalid color! Choose 'red' or 'black'"
+        return "Invalid color! Choose 'red' or 'black'"
     elif bet_type == "odd_even" and bet_value not in ["odd", "even"]:
-        return "❌ Invalid choice! Choose 'odd' or 'even'"
+        return "Invalid choice! Choose 'odd' or 'even'"
     elif bet_type == "high_low" and bet_value not in ["high", "low"]:
-        return "❌ Invalid choice! Choose 'high' (19-36) or 'low' (1-18)"
+        return "Invalid choice! Choose 'high' (19-36) or 'low' (1-18)"
 
     prefix = "Bet capped to your balance: £" if was_capped else "✅ Bet placed: £"
     return f"{prefix}{amount} on {bet_type} {bet_value}"
@@ -157,12 +157,12 @@ async def check_results(
 
 @roulette_agent.tool
 async def get_balance(ctx: RunContext[GameState]) -> str:
-    return f"💰 Your current balance: £{ctx.deps.balance}"
+    return f"Your current balance: £{ctx.deps.balance}"
 
 
 @roulette_agent.tool
 async def get_game_rules(ctx: RunContext[GameState]) -> str:
-    return """🎰 ROULETTE RULES & PAYOUTS:
+    return """ROULETTE RULES & PAYOUTS:
 
 BET TYPES:
 • Straight (single number): Bet on one number (0, 00, 1-36) - Pays 35:1
